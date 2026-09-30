@@ -15,21 +15,12 @@ class DatabasePool:
         if self.session_factory:
             return
         try:
-            database_url = settings.database_url
-            for prefix in ("postgresql://", "postgres://"):
-                if database_url.startswith(prefix):
-                    database_url = "postgresql+asyncpg://" + database_url[len(prefix):]
-                    break
+            database_url = settings.database_url.replace("postgresql://", "postgresql+asyncpg://", 1).replace("postgres://", "postgresql+asyncpg://", 1)
 
             # Async engines use AsyncAdaptedQueuePool by default; sync QueuePool is rejected.
             self.engine = create_async_engine(
                 database_url,
-                pool_size=settings.database_pool_size,
-                max_overflow=settings.database_max_overflow,
-                pool_timeout=settings.database_pool_timeout,
-                pool_pre_ping=True,
-                pool_recycle=settings.database_pool_recycle,
-                echo=False
+                pool_pre_ping=True
             )
             
             self.session_factory = async_sessionmaker(

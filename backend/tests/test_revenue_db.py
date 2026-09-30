@@ -8,7 +8,8 @@ import os
 import pytest
 
 from app.config import settings
-from app.core import database_pool
+from app.core.database_pool import DatabasePool
+from app.services import reservations
 from app.services.reservations import calculate_total_revenue
 
 DB_URL = os.getenv("REVENUE_TEST_DATABASE_URL")
@@ -17,15 +18,16 @@ pytestmark = pytest.mark.skipif(not DB_URL, reason="REVENUE_TEST_DATABASE_URL no
 
 def _run(coro_fn, monkeypatch, url):
     monkeypatch.setattr(settings, "database_url", url)
-    monkeypatch.setattr(database_pool, "db_pool", database_pool.DatabasePool())
+    pool = DatabasePool()
+    monkeypatch.setattr(reservations, "db_pool", pool)
 
-    async def wrapper():
+    async def run():
         try:
             return await coro_fn()
         finally:
-            await database_pool.db_pool.close()
+            await pool.close()
 
-    return asyncio.run(wrapper())
+    return asyncio.run(run())
 
 
 @pytest.mark.parametrize(
