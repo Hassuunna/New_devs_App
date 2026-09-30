@@ -104,6 +104,7 @@ export const RevenueSummary: React.FC<RevenueSummaryProps> = ({ propertyId = 'pr
                 </div>
 
                 {/* Precision Warning Area */}
+                {/* Moot: backend now rounds to cents, so this never fires. */}
                 <div className="mt-4 h-6">
                     {Math.abs(data.total_revenue - displayTotal) > 0.000001 && showRaw && (
                         <div className="flex items-center text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
