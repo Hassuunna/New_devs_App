@@ -19,18 +19,23 @@ async def calculate_monthly_revenue(property_id: str, tenant_id: str, month: int
     else:
         end_date = datetime(year + 1, 1, 1)
 
-    query = """
+    query = text("""
         SELECT SUM(r.total_amount) as total
         FROM reservations r
         JOIN properties p ON p.id = r.property_id AND p.tenant_id = r.tenant_id
-        WHERE r.property_id = $1
-        AND r.tenant_id = $2
-        AND (r.check_in_date AT TIME ZONE p.timezone) >= $3
-        AND (r.check_in_date AT TIME ZONE p.timezone) < $4
-    """
+        WHERE r.property_id = :property_id
+        AND r.tenant_id = :tenant_id
+        AND (r.check_in_date AT TIME ZONE p.timezone) >= :start_date
+        AND (r.check_in_date AT TIME ZONE p.timezone) < :end_date
+    """)
 
-    result = await db_session.fetchval(query, property_id, tenant_id, start_date, end_date)
-    return result or Decimal('0')
+    result = await db_session.execute(query, {
+        "property_id": property_id,
+        "tenant_id": tenant_id,
+        "start_date": start_date,
+        "end_date": end_date
+    })
+    return result.scalar() or Decimal('0')
 
 async def calculate_total_revenue(property_id: str, tenant_id: str) -> Dict[str, Any]:
     """
