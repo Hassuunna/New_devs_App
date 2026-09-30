@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 async def calculate_monthly_revenue(property_id: str, tenant_id: str, month: int, year: int, db_session) -> Decimal:
     """
@@ -17,8 +17,6 @@ async def calculate_monthly_revenue(property_id: str, tenant_id: str, month: int
     else:
         end_date = datetime(year + 1, 1, 1)
 
-    # Naive local boundaries are compared against check_in converted to the
-    # property's local wall-clock time.
     query = """
         SELECT SUM(r.total_amount) as total
         FROM reservations r
@@ -28,9 +26,6 @@ async def calculate_monthly_revenue(property_id: str, tenant_id: str, month: int
         AND (r.check_in_date AT TIME ZONE p.timezone) >= $3
         AND (r.check_in_date AT TIME ZONE p.timezone) < $4
     """
-
-    if db_session is None:
-        raise ValueError("calculate_monthly_revenue requires a db_session")
 
     result = await db_session.fetchval(query, property_id, tenant_id, start_date, end_date)
     return result or Decimal('0')
