@@ -61,7 +61,8 @@ export const RevenueSummary: React.FC<RevenueSummaryProps> = ({ propertyId = 'pr
     if (error) return <div className="p-4 text-red-500 bg-red-50 rounded-lg">{error}</div>;
     if (!data) return null;
 
-    const displayTotal = Math.round(data.total_revenue * 100) / 100;
+    // Backend already rounds to cents (ROUND_HALF_UP); avoid float math here.
+    const displayTotal = data.total_revenue;
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
@@ -103,6 +104,7 @@ export const RevenueSummary: React.FC<RevenueSummaryProps> = ({ propertyId = 'pr
                 </div>
 
                 {/* Precision Warning Area */}
+                {/* Moot: backend now rounds to cents, so this never fires. */}
                 <div className="mt-4 h-6">
                     {Math.abs(data.total_revenue - displayTotal) > 0.000001 && showRaw && (
                         <div className="flex items-center text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">

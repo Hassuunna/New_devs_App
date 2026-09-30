@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, Any
 from app.services.cache import get_revenue_summary
 from app.core.auth import authenticate_request as get_current_user
@@ -15,11 +16,12 @@ async def get_dashboard_summary(
     
     revenue_data = await get_revenue_summary(property_id, tenant_id)
     
-    total_revenue_float = float(revenue_data['total'])
+    # Sum is exact (NUMERIC, 3 dp); round to cents once, half-up, before serializing.
+    total_revenue = Decimal(str(revenue_data['total'])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     
     return {
         "property_id": revenue_data['property_id'],
-        "total_revenue": total_revenue_float,
+        "total_revenue": float(total_revenue),
         "currency": revenue_data['currency'],
         "reservations_count": revenue_data['count']
     }
